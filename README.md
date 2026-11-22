@@ -24,7 +24,10 @@ doesn't match. Nothing binary is kept in git. To move to a newer SDL, change `Sd
 
 ## Releasing
 
-Push a tag named after the version, `v3.4.20`. CI packs the package and publishes it to nuget.org through trusted
+Every push to `main` publishes a test build to GitHub Packages (`nuget.pkg.github.com/AtomicBlom`), versioned
+`3.4.20-ci.<run>`. Restoring one needs a GitHub token with `read:packages`.
+
+For a release, push a tag named after the version, `v3.4.20`. CI packs the package and publishes it to nuget.org through trusted
 publishing: it needs a policy for this repository and `pack.yml` on nuget.org, and the nuget.org user name as the
 `NUGET_USER` secret. No API key is stored.
 

@@ -31,6 +31,8 @@
     <PackageId>BinaryVibrance.Kaldra.SDL3</PackageId>
     <Version>$(SdlVersion)</Version>
     <Version Condition="'$(PackageRevision)' != '0'">$(SdlVersion).$(PackageRevision)</Version>
+    <!-- A test build's prerelease label (ci.123), which Version set outright would otherwise ignore -->
+    <Version Condition="'$(VersionSuffix)' != ''">$(Version)-$(VersionSuffix)</Version>
     <Authors>Steven Blom</Authors>
     <Description>SDL $(SdlVersion)'s native libraries for win-x64 and win-arm64, from SDL's own release builds, as runtimes/&lt;rid&gt;/native/SDL3.dll. No bindings.</Description>
     <PackageTags>SDL SDL3 native</PackageTags>

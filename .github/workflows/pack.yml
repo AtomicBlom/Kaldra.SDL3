@@ -1,6 +1,7 @@
 name: Pack
 
-# Every push and PR packs the package (which downloads SDL and checks its hashes); a v* tag also publishes it.
+# Every push and PR packs the package (which downloads SDL and checks its hashes). A push to main also publishes a test
+# build to GitHub Packages (3.4.20-ci.<run>). A v* tag publishes the release to nuget.org.
 on:
   push:
     branches: [main]
@@ -10,30 +11,48 @@ on:
 
 permissions:
   contents: read
-  id-token: write   # nuget.org's trusted publishing: a short-lived key from GitHub's OIDC token, no stored secret
+  packages: write   # test builds, to GitHub Packages
+  id-token: write   # releases: nuget.org's trusted publishing, a short-lived key from GitHub's OIDC token
 
 jobs:
   pack:
     runs-on: windows-latest
+    env:
+      RELEASE: ${{ startsWith(github.ref, 'refs/tags/v') }}
+      TEST_BUILD: ${{ github.ref == 'refs/heads/main' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
-      - name: Pack
+
+      - name: Pack a release
+        if: env.RELEASE == 'true'
         run: dotnet pack Kaldra.SDL3 -c Release -o artifacts/packages
+      - name: Pack a test build
+        if: env.RELEASE != 'true'
+        run: dotnet pack Kaldra.SDL3 -c Release -o artifacts/packages -p:VersionSuffix=ci.${{ github.run_number }}
       - uses: actions/upload-artifact@v4
         with:
           name: package
           path: artifacts/packages/*.nupkg
+
+      - name: Publish the test build to GitHub Packages
+        if: env.TEST_BUILD == 'true'
+        run: >
+          dotnet nuget push "artifacts/packages/*.nupkg"
+          --source "https://nuget.pkg.github.com/AtomicBlom/index.json"
+          --api-key ${{ secrets.GITHUB_TOKEN }}
+          --skip-duplicate
+
       - name: Log in to nuget.org
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: env.RELEASE == 'true'
         id: nuget
         uses: NuGet/login@v1
         with:
           user: ${{ secrets.NUGET_USER }}
-      - name: Publish
-        if: startsWith(github.ref, 'refs/tags/v')
+      - name: Publish the release to nuget.org
+        if: env.RELEASE == 'true'
         run: >
           dotnet nuget push "artifacts/packages/*.nupkg"
           --source https://api.nuget.org/v3/index.json
