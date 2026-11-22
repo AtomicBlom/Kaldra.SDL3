@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   pack:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     env:
       RELEASE: ${{ startsWith(github.ref, 'refs/tags/v') }}
       TEST_BUILD: ${{ github.ref == 'refs/heads/main' }}
