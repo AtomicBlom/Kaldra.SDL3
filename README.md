@@ -22,6 +22,12 @@ The build downloads SDL's release zips from GitHub, checks each against its pinn
 doesn't match. Nothing binary is kept in git. To move to a newer SDL, change `SdlVersion` and the two hashes in
 `Kaldra.SDL3/Kaldra.SDL3.csproj`. To repackage the same SDL, pass `-p:PackageRevision=1`.
 
+## Releasing
+
+Push a tag named after the version, `v3.4.20`. CI packs the package and publishes it to nuget.org through trusted
+publishing: it needs a policy for this repository and `pack.yml` on nuget.org, and the nuget.org user name as the
+`NUGET_USER` secret. No API key is stored.
+
 ## Licence
 
 SDL is under the [zlib licence](https://github.com/libsdl-org/SDL/blob/main/LICENSE.txt), and the package is
