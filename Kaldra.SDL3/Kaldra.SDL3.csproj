@@ -1,0 +1,70 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    SDL 3's native libraries as a package, and nothing else: no bindings. Each consumer keeps its own P/Invokes for the
+    functions it calls, so Kaldra's desktop host (gamepads) and Sirrow (audio) load the one SDL3.dll this carries.
+
+    The binaries are SDL's own release builds, pinned by version and SHA-256 and downloaded when the package is built.
+    Nothing binary is kept in git. A new SDL means a new SdlVersion and its two hashes. The package's version is SDL's
+    own; PackageRevision, the fourth part, counts repackagings of the same SDL.
+
+    SDL publishes Windows builds only (x64, arm64), so the package carries those two. On other platforms it carries
+    nothing, and each consumer copes without SDL as it does now.
+  -->
+
+  <PropertyGroup>
+    <SdlVersion>3.4.20</SdlVersion>
+    <SdlHashWinX64>368BED8B24E44AD9EA372990814F2343FCFB9E468ABB7F8F4A3BC146C7304752</SdlHashWinX64>
+    <SdlHashWinArm64>51C292EAFC114EA3C63519FA2F5413A486979769D5444A636296F8A61C737267</SdlHashWinArm64>
+    <SdlUrl>https://github.com/libsdl-org/SDL/releases/download/release-$(SdlVersion)</SdlUrl>
+    <SdlDownloads>$(BaseIntermediateOutputPath)sdl\$(SdlVersion)</SdlDownloads>
+    <PackageRevision Condition="'$(PackageRevision)' == ''">0</PackageRevision>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- Only so the project can be packed: the package has no assembly, so any framework can take it. -->
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+
+    <PackageId>BinaryVibrance.Kaldra.SDL3</PackageId>
+    <Version>$(SdlVersion)</Version>
+    <Version Condition="'$(PackageRevision)' != '0'">$(SdlVersion).$(PackageRevision)</Version>
+    <Authors>Steven Blom</Authors>
+    <Description>SDL $(SdlVersion)'s native libraries for win-x64 and win-arm64, from SDL's own release builds, as runtimes/&lt;rid&gt;/native/SDL3.dll. No bindings.</Description>
+    <PackageTags>SDL SDL3 native</PackageTags>
+    <PackageLicenseExpression>Zlib</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/AtomicBlom/Kaldra.SDL3</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/AtomicBlom/Kaldra.SDL3</RepositoryUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <SdlArch Include="x64" Hash="$(SdlHashWinX64)" />
+    <SdlArch Include="arm64" Hash="$(SdlHashWinArm64)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\README.md" Pack="true" PackagePath="README.md" />
+    <!-- An empty marker, so the package applies to any target framework without offering it an assembly -->
+    <None Include="_._" Pack="true" PackagePath="lib\netstandard2.0\_._" />
+    <None Include="$(SdlDownloads)\win-x64\SDL3.dll" Pack="true" PackagePath="runtimes\win-x64\native\SDL3.dll" Visible="false" />
+    <None Include="$(SdlDownloads)\win-x64\LICENSE.txt" Pack="true" PackagePath="runtimes\win-x64\native\SDL3.LICENSE.txt" Visible="false" />
+    <None Include="$(SdlDownloads)\win-arm64\SDL3.dll" Pack="true" PackagePath="runtimes\win-arm64\native\SDL3.dll" Visible="false" />
+    <None Include="$(SdlDownloads)\win-arm64\LICENSE.txt" Pack="true" PackagePath="runtimes\win-arm64\native\SDL3.LICENSE.txt" Visible="false" />
+  </ItemGroup>
+
+  <!-- Fetched before the package is made. Unlike a consumer's build, which could warn and go on without SDL, a package
+       without its binaries is useless, so a failed download or a hash that doesn't match fails here. -->
+  <Target Name="FetchSdl" BeforeTargets="Build;GenerateNuspec"
+          Inputs="$(MSBuildThisFileFullPath)" Outputs="@(SdlArch->'$(SdlDownloads)\win-%(Identity)\SDL3.dll')">
+    <DownloadFile SourceUrl="$(SdlUrl)/SDL3-$(SdlVersion)-win32-%(SdlArch.Identity).zip" DestinationFolder="$(SdlDownloads)" Retries="2"
+                  Condition="!Exists('$(SdlDownloads)\win-%(SdlArch.Identity)\SDL3.dll')" />
+    <VerifyFileHash File="$(SdlDownloads)\SDL3-$(SdlVersion)-win32-%(SdlArch.Identity).zip" Hash="%(SdlArch.Hash)" Algorithm="SHA256"
+                    Condition="!Exists('$(SdlDownloads)\win-%(SdlArch.Identity)\SDL3.dll')" />
+    <Unzip SourceFiles="$(SdlDownloads)\SDL3-$(SdlVersion)-win32-%(SdlArch.Identity).zip" DestinationFolder="$(SdlDownloads)\win-%(SdlArch.Identity)"
+           Condition="!Exists('$(SdlDownloads)\win-%(SdlArch.Identity)\SDL3.dll')" />
+  </Target>
+
+</Project>

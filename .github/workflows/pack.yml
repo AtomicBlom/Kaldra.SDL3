@@ -1,0 +1,35 @@
+name: Pack
+
+# Every push and PR packs the package (which downloads SDL and checks its hashes); a v* tag also publishes it.
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  pack:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Pack
+        run: dotnet pack Kaldra.SDL3 -c Release -o artifacts/packages
+      - uses: actions/upload-artifact@v4
+        with:
+          name: package
+          path: artifacts/packages/*.nupkg
+      - name: Publish
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: >
+          dotnet nuget push "artifacts/packages/*.nupkg"
+          --source "https://nuget.pkg.github.com/AtomicBlom/index.json"
+          --api-key ${{ secrets.GITHUB_TOKEN }}
+          --skip-duplicate
