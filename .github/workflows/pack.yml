@@ -28,10 +28,10 @@ jobs:
 
       - name: Pack a release
         if: env.RELEASE == 'true'
-        run: dotnet pack Kaldra.SDL3 -c Release -o artifacts/packages
+        run: dotnet pack BinaryVibrance.Kaldra.SDL3 -c Release -o artifacts/packages
       - name: Pack a test build
         if: env.RELEASE != 'true'
-        run: dotnet pack Kaldra.SDL3 -c Release -o artifacts/packages -p:VersionSuffix=ci.${{ github.run_number }}
+        run: dotnet pack BinaryVibrance.Kaldra.SDL3 -c Release -o artifacts/packages -p:VersionSuffix=ci.${{ github.run_number }}
       - uses: actions/upload-artifact@v4
         with:
           name: package
