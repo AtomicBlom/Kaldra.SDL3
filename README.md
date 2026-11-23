@@ -15,12 +15,12 @@ loads one `SDL3.dll`.
 ## Building
 
 ```
-dotnet pack Kaldra.SDL3 -c Release -o artifacts/packages
+dotnet pack BinaryVibrance.Kaldra.SDL3 -c Release -o artifacts/packages
 ```
 
 The build downloads SDL's release zips from GitHub, checks each against its pinned SHA-256, and fails if either
 doesn't match. Nothing binary is kept in git. To move to a newer SDL, change `SdlVersion` and the two hashes in
-`Kaldra.SDL3/Kaldra.SDL3.csproj`. To repackage the same SDL, pass `-p:PackageRevision=1`.
+`BinaryVibrance.Kaldra.SDL3/BinaryVibrance.Kaldra.SDL3.csproj`. To repackage the same SDL, pass `-p:PackageRevision=1`.
 
 ## Releasing
 
